@@ -220,7 +220,7 @@ function resetHighlight(type) {
   if (type === 'wereda' && weredaLayer) weredaLayer.setStyle(f => ({
     color: '#333',
     weight: 1,
-    fillColor: getColorForWereda(f.properties.WEREDA),
+    fillColor: getColorForWereda(f.properties.Wereda_Nam),
     fillOpacity: 0.6
   }));
   if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
@@ -313,6 +313,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
