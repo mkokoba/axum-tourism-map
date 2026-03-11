@@ -46,7 +46,7 @@ function loadGeoJSON(url, options) {
 }
 
 // === Wereda Layer ===
-fetch('map/tourist_wereda.geojson')
+fetch('map/map.geojson')
   .then(res => res.json())
   .then(data => {
     weredaLayer = L.geoJSON(data, {
@@ -312,6 +312,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
