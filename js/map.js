@@ -1,5 +1,5 @@
 // === Global Variables ===
-let map = L.map('map').setView([14.123, 38.724], 10);
+let map = L.map('map').setView([13.90, 37.50], 8);
 let weredaLayer, roadLayer, siteLayer;
 
 // === Base Map ===
@@ -314,6 +314,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
