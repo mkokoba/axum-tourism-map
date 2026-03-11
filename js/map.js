@@ -51,7 +51,7 @@ fetch('map/wereda1.geojson')
   .then(data => {
     weredaLayer = L.geoJSON(data, {
       style: function (feature) {
-        const color = getColorForWereda(feature.properties.WEREDA);
+        const color = getColorForWereda(feature.properties.Wereda_Nam);
         return {
           color: '#333',
           weight: 1,
@@ -313,6 +313,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
