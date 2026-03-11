@@ -48,7 +48,7 @@ function loadGeoJSON(url, options) {
 }
 
 // === Wereda Layer ===
-fetch('map/tourist_wereda.geojson')
+fetch('map/boundary.geojson')
   .then(res => res.json())
   .then(data => {
     weredaLayer = L.geoJSON(data, {
@@ -70,7 +70,7 @@ fetch('map/tourist_wereda.geojson')
   });
 
 // === Road Layer ===
-loadGeoJSON('map/tourist_road.geojson', {
+loadGeoJSON('map/road.geojson', {
   style: function (feature) {
     const colors = {
       trunk: '#e41a1c',
@@ -89,7 +89,7 @@ loadGeoJSON('map/tourist_road.geojson', {
 });
 
 // === Tourist Site Layer ===
-loadGeoJSON('map/attractionsite.geojson', {
+loadGeoJSON('map/site.geojson', {
   pointToLayer: function (feature, latlng) {
     const name = feature.properties.Name || 'Tourist Site';
     const distance = feature.properties.NEAR_DIST;
@@ -314,3 +314,4 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
