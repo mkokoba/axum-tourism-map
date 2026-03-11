@@ -3,11 +3,11 @@ let map = L.map('map').setView([14.123, 38.724], 10);
 let weredaLayer, roadLayer, siteLayer;
 
 // === Base Map ===
-/*
+
 L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
   attribution: '&copy; <a href="https://carto.com/">Carto</a> contributors'
 }).addTo(map);
-*/
+
 //attraction site awsome6 icons
 function createTouristIcon(iconClass, bgColor) {
   return L.divIcon({
@@ -314,4 +314,5 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
