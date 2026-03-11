@@ -68,6 +68,7 @@ fetch('map/wereda1.geojson')
   });
 
 // === Road Layer ===
+/*
 loadGeoJSON('map/road1.geojson', {
   style: function (feature) {
     const colors = {
@@ -85,7 +86,7 @@ loadGeoJSON('map/road1.geojson', {
 }).then(layer => {
   roadLayer = layer;
 });
-
+*/
 // === Tourist Site Layer ===
 loadGeoJSON('map/site1.geojson', {
   pointToLayer: function (feature, latlng) {
@@ -312,6 +313,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
