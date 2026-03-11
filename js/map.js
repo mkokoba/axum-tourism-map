@@ -195,7 +195,7 @@ legend.onAdd = function (map) {
 legend.addTo(map);
 
 // === Toggle & Highlight Functions ===
-/*
+
 function toggleLayer(type) {
   if (type === 'wereda') {
     if (map.hasLayer(weredaLayer)) map.removeLayer(weredaLayer);
@@ -314,6 +314,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
