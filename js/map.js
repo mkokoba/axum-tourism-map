@@ -46,7 +46,7 @@ function loadGeoJSON(url, options) {
 }
 
 // === Wereda Layer (Tigray Zones) ===
-fetch('map/wereda1.json')   // change to .geojson if your file uses that extension
+fetch('map/wereda1.geojson')   // change to .geojson if your file uses that extension
   .then(response => {
     if (!response.ok) {
       throw new Error("File not found: map/wereda1.json");
@@ -368,6 +368,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
