@@ -46,64 +46,26 @@ function loadGeoJSON(url, options) {
 }
 
 // === Wereda Layer ===
-// === Wereda Layer (Tigray Zones) ===
-fetch('map/wereda1.json')   // change to .geojson if your file uses that extension
-  .then(response => {
-    if (!response.ok) {
-      throw new Error("File not found: map/wereda1.json");
-    }
-    return response.json();
-  })
+// === Wereda Layer ===
+fetch('map/wereda1.geojson')
+  .then(res => res.json())
   .then(data => {
-
-    console.log("Wereda data loaded successfully:", data);
 
     weredaLayer = L.geoJSON(data, {
       style: function (feature) {
-
-        // Safe property reading
-        const zoneName = feature.properties.ZONE_ || 
-                         feature.properties.Zone || 
-                         feature.properties.NAME || 
-                         "Unknown";
-
+        const color = getColorForWereda(feature.properties.ZONE_);
         return {
-          color: "#333",
+          color: '#333',
           weight: 1,
-          fillColor: getColorForWereda(zoneName),
+          fillColor: color,
           fillOpacity: 0.6
         };
-      },
-
-      onEachFeature: function (feature, layer) {
-
-        const zoneName = feature.properties.ZONE_ || 
-                         feature.properties.Zone || 
-                         feature.properties.NAME || 
-                         "Unknown";
-
-        // popup
-        layer.bindPopup(
-          "<b>Zone:</b> " + zoneName
-        );
-
-        // tooltip label
-        layer.bindTooltip(zoneName, {
-          permanent: false,
-          direction: "center",
-          className: "wereda-label"
-        });
       }
-
     }).addTo(map);
 
-    // zoom to layer
-    const bounds = weredaLayer.getBounds();
-    map.fitBounds(bounds);
+    // Zoom map to zone boundaries
+    map.fitBounds(weredaLayer.getBounds());
 
-  })
-  .catch(error => {
-    console.error("Error loading Wereda layer:", error);
   });
 
 
@@ -354,6 +316,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
