@@ -108,7 +108,7 @@ fetch('map/wereda1.json')   // change to .geojson if your file uses that extensi
 
 // === Road Layer ===
 // === Road Layer ===
-loadGeoJSON('map/road1.geojson', {
+loadGeoJSON('map/road.geojson', {
 
   style: function (feature) {
 
@@ -368,6 +368,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
