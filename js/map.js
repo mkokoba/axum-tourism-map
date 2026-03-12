@@ -45,32 +45,69 @@ function loadGeoJSON(url, options) {
     .catch(err => console.error("Error loading " + url, err));
 }
 
-// === Wereda Layer ===
-// === Wereda Layer ===
-fetch('map/wereda1.geojson')
-  .then(res => res.json())
+// === Wereda Layer (Tigray Zones) ===
+fetch('map/wereda1.json')   // change to .geojson if your file uses that extension
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("File not found: map/wereda1.json");
+    }
+    return response.json();
+  })
   .then(data => {
+
+    console.log("Wereda data loaded successfully:", data);
 
     weredaLayer = L.geoJSON(data, {
       style: function (feature) {
-        const color = getColorForWereda(feature.properties.ZONE_);
+
+        // Safe property reading
+        const zoneName = feature.properties.ZONE_ || 
+                         feature.properties.Zone || 
+                         feature.properties.NAME || 
+                         "Unknown";
+
         return {
-          color: '#333',
+          color: "#333",
           weight: 1,
-          fillColor: color,
+          fillColor: getColorForWereda(zoneName),
           fillOpacity: 0.6
         };
+      },
+
+      onEachFeature: function (feature, layer) {
+
+        const zoneName = feature.properties.ZONE_ || 
+                         feature.properties.Zone || 
+                         feature.properties.NAME || 
+                         "Unknown";
+
+        // popup
+        layer.bindPopup(
+          "<b>Zone:</b> " + zoneName
+        );
+
+        // tooltip label
+        layer.bindTooltip(zoneName, {
+          permanent: false,
+          direction: "center",
+          className: "wereda-label"
+        });
       }
+
     }).addTo(map);
 
-    // Zoom map to zone boundaries
-    map.fitBounds(weredaLayer.getBounds());
+    // zoom to layer
+    const bounds = weredaLayer.getBounds();
+    map.fitBounds(bounds);
 
+  })
+  .catch(error => {
+    console.error("Error loading Wereda layer:", error);
   });
 
 
 // === Road Layer ===
-loadGeoJSON('map/road1.geojson', {
+loadGeoJSON('map/road11.geojson', {
   style: function (feature) {
     const colors = {
       trunk: '#e41a1c',
@@ -316,6 +353,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
