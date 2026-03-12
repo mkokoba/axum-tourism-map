@@ -51,7 +51,7 @@ fetch('map/wereda1.geojson')
   .then(data => {
     weredaLayer = L.geoJSON(data, {
       style: function (feature) {
-        const color = getColorForWereda(feature.properties.Wereda_Nam);
+        const color = getColorForWereda(feature.properties.ZONE_);
         return {
           color: '#333',
           weight: 1,
@@ -221,7 +221,7 @@ function resetHighlight(type) {
   if (type === 'wereda' && weredaLayer) weredaLayer.setStyle(f => ({
     color: '#333',
     weight: 1,
-    fillColor: getColorForWereda(f.properties.Wereda_Nam),
+    fillColor: getColorForWereda(f.properties.ZONE_),
     fillOpacity: 0.6
   }));
   if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
@@ -314,6 +314,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
