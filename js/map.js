@@ -107,21 +107,36 @@ fetch('map/wereda1.json')   // change to .geojson if your file uses that extensi
 
 
 // === Road Layer ===
+// === Road Layer ===
 loadGeoJSON('map/road1.geojson', {
+
   style: function (feature) {
+
     const colors = {
-      trunk: '#e41a1c',
-      primary: '#377eb8',
-      secondary: '#4daf4a',
-      tertiary: '#984ea3',
-      residential: '#ff7f00'
+      Asphalt: '#e41a1c',
+      Gravel: '#ff7f00',
+      Earth: '#999999'
     };
 
+    const roadType = feature.properties.TYPE;
+
     return {
-      color: colors[feature.properties.fclass] || '#999',
-      weight: 2
+      color: colors[roadType] || '#666',
+      weight: 3
     };
+  },
+
+  onEachFeature: function (feature, layer) {
+
+    const name = feature.properties.NAME || "Road";
+    const type = feature.properties.TYPE || "Unknown";
+
+    layer.bindPopup(
+      "<b>Road Name:</b> " + name +
+      "<br><b>Road Type:</b> " + type
+    );
   }
+
 }).then(layer => {
   roadLayer = layer;
 });
@@ -353,6 +368,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
