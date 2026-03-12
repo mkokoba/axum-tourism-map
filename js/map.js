@@ -88,7 +88,7 @@ loadGeoJSON('map/road1.geojson', {
 });
 
 // === Tourist Site Layer ===
-loadGeoJSON('map/site1.geojson', {
+loadGeoJSON('map/siteF.geojson', {
   pointToLayer: function (feature, latlng) {
     const name = feature.properties.Name || 'Tourist Site';
     const distance = feature.properties.NEAR_DIST;
@@ -314,6 +314,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
