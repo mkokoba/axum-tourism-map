@@ -108,23 +108,59 @@ fetch('map/wereda1.json')   // change to .geojson if your file uses that extensi
 
 // === Road Layer ===
 
-loadGeoJSON('map/road1.geojson', {
-  style: function (feature) {
-    const colors = {
-      trunk: '#e41a1c',
-      primary: '#377eb8',
-      secondary: '#4daf4a',
-      tertiary: '#984ea3',
-      residential: '#ff7f00'
-    };
-    return {
-      color: colors[feature.properties.fclass] || '#999',
-      weight: 2
-    };
-  }
-}).then(layer => {
-  roadLayer = layer;
-});
+// === Road Layer ===
+
+fetch('map/road1.json')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Road file not found");
+    }
+    return response.json();
+  })
+  .then(data => {
+
+    console.log("Road data loaded:", data);
+
+    roadLayer = L.geoJSON(data, {
+
+      style: function (feature) {
+
+        const roadType = feature.properties.fclass || 
+                         feature.properties.type || 
+                         "other";
+
+        const colors = {
+          trunk: "#e41a1c",
+          primary: "#377eb8",
+          secondary: "#4daf4a",
+          tertiary: "#984ea3",
+          residential: "#ff7f00",
+          other: "#999"
+        };
+
+        return {
+          color: colors[roadType] || "#999",
+          weight: 3
+        };
+      },
+
+      onEachFeature: function (feature, layer) {
+
+        const roadName = feature.properties.name || "Road";
+        const roadType = feature.properties.fclass || "Unknown";
+
+        layer.bindPopup(
+          "<b>Road:</b> " + roadName +
+          "<br><b>Type:</b> " + roadType
+        );
+      }
+
+    }).addTo(map);
+
+  })
+  .catch(error => {
+    console.error("Error loading road layer:", error);
+  });
 
 // === Tourist Site Layer ===
 loadGeoJSON('map/siteF.geojson', {
@@ -353,6 +389,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
