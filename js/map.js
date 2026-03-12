@@ -107,7 +107,7 @@ fetch('map/wereda1.json')   // change to .geojson if your file uses that extensi
 
 
 // === Road Layer ===
-loadGeoJSON('map/road11.geojson', {
+loadGeoJSON('map/road1.geojson', {
   style: function (feature) {
     const colors = {
       trunk: '#e41a1c',
@@ -353,6 +353,7 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
+
 
 
 
