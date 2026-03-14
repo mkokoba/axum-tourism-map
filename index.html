@@ -23,25 +23,50 @@
         <h1>Tourist Attraction Map</h1>
 </section>
 
-<!-- === MAP SECTION START === -->
-<section class="map-section" >
+<!-- Map Container -->
+<section class="map-section">
     <div id="map"></div>
 </section>
-<!-- === MAP SECTION END === -->
 
-    
-<!--------Footer------>
-<section class="footer">
-    <h4>About Us</h4>
-    <p>Axum is one of the best tourist destination in Etihiopa</p>
-    <div class="icons">
-        <i class="fab fa-facebook"></i>
-        <i class="fab fa-twitter"></i>
-        <i class="fab fa-instagram"></i>
-        <i class="fab fa-linkedin"></i>
+<!-- Custom Legend Container -->
+<div id="map-legend" class="custom-legend collapsible">
+    <div class="legend-header" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h4>Map Legend</h4>
     </div>
-    <p>Map design: Kokob Awetehey <i class="far fa-heart"></i> Data: Axum Culture & Tourism Office</p>
-</section>
+    <div class="legend-content">
+        <!-- Wereda -->
+        <div class="legend-section">
+            <label><input type="checkbox" checked onchange="toggleLayer('wereda')"> Wereda Boundaries</label>
+            <span class="legend-box" style="background:#a6d854;"></span> Example Wereda
+        </div>
+
+        <!-- Roads -->
+        <div class="legend-section">
+            <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label>
+            <div id="roadLegendItems"></div>
+        </div>
+
+        <!-- Tourist Sites -->
+        <div class="legend-section">
+            <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label>
+            <div id="siteLegendItems"></div>
+        </div>
+
+        <!-- Rivers -->
+        <div class="legend-section">
+            <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label>
+            <span class="legend-line" style="background:#0077be; height: 3px;"></span> River
+        </div>
+
+        <!-- Optional: Search -->
+        <div style="margin-top: 10px">
+            <input type="text" id="siteSearch" placeholder="Search Tourist Site..." onkeyup="searchTouristSite(this.value)" autocomplete="off">
+            <div id="suggestions" class="suggestions-list"></div>
+        </div>
+
+        <button onclick="resetMapLayers()">Reset All</button>
+    </div>
+</div>
 
 <!-- Leaflet Scripts -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
