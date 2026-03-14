@@ -260,7 +260,6 @@ legend.onAdd = function (map) {
       <div class="legend-item"><span class="legend-icon" style="background:#4caf50"><i class="fas fa-tree"></i></span> Natural Recreation</div>
     </div>
 
-    // Inside your legend.onAdd function, add this div:
     <div class="legend-section" onmouseover="highlightLayer('river')" onmouseout="resetHighlight('river')">
       <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label><br>
       <span class="legend-line" style="background:#0077be; height: 3px;"></span> River
@@ -298,6 +297,7 @@ function toggleLayer(type) {
   if (type === 'river') {
     if (map.hasLayer(riverLayer)) map.removeLayer(riverLayer);
     else map.addLayer(riverLayer);
+}
 }
 
 function highlightLayer(type) {
