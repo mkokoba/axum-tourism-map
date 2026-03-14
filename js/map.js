@@ -1,6 +1,6 @@
 // === Global Variables ===
 let map = L.map('map').setView([13.90, 37.50], 8);
-let weredaLayer, roadLayer, siteLayer;
+let weredaLayer, roadLayer, siteLayer, riverLayer;
 
 // === Base Map ===
 /*
@@ -140,7 +140,32 @@ loadGeoJSON('map/road1.geojson', {
 }).then(layer => {
   roadLayer = layer;
 });
-
+// === River Layer ===
+loadGeoJSON('map/rivers.geojson', { 
+  style: function (feature) {
+    // You can adjust weight based on specific properties if available
+    return {
+      color: '#2a7fff', // A vibrant river blue
+      weight: 2.5,
+      opacity: 0.8,
+      lineCap: 'round' // Makes the river joints look smooth
+    };
+  },
+  onEachFeature: function (feature, layer) {
+    // Accessing the specific 'River_Name' property
+    const name = feature.properties.River_Name || "Unnamed River/Stream";
+    
+    layer.bindPopup(`<b>River:</b> ${name}`);
+    
+    // Optional: Add a subtle tooltip that appears on hover
+    layer.bindTooltip(name, {
+      sticky: true, 
+      className: 'river-label'
+    });
+  }
+}).then(layer => {
+  riverLayer = layer;
+});
 // === Tourist Site Layer ===
 loadGeoJSON('map/siteF.geojson', {
   pointToLayer: function (feature, latlng) {
