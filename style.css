@@ -481,6 +481,19 @@ h3{
   vertical-align: middle;
 }
 
+.legend-category {
+  margin-bottom:5px;
+  font-size:14px;
+}
+
+.legend-category span {
+  vertical-align: middle;
+}
+
+.legend-category input[type=checkbox] {
+  margin-right:5px;
+}
+
 
 
 
