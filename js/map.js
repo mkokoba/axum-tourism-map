@@ -122,6 +122,14 @@ loadGeoJSON('map/road1.geojson', {
     color: roadColors[roadType] || "#666",
     weight: 3
   };
+    const isUnderConstruction = roadType === "Asphalt UN Cons";
+
+  return {
+    color: colors[roadType] || "#666",
+    weight: 3,
+    dashArray: isUnderConstruction ? "6, 6" : null  // dashed for under construction
+  };
+} 
 },
 
   onEachFeature: function (feature, layer) {
@@ -214,8 +222,10 @@ loadGeoJSON('map/siteF.geojson', {
   }
 }).then(layer => {
   siteLayer = layer;
+  generateSiteLegend();
 });
 
+// === road legend ===
 function generateRoadLegend() {
 
   const container = document.getElementById("roadLegendItems");
@@ -229,6 +239,27 @@ function generateRoadLegend() {
 
     container.appendChild(item);
 
+  });
+}
+
+// === site legend ===
+function generateSiteLegend() {
+  const container = document.getElementById("siteLegendItems");
+
+  const types = new Set();
+  siteLayer.eachLayer(marker => {
+    const type = marker.feature.properties.Attra_Type?.trim() || "Unknown";
+    types.add(type);
+  });
+
+  types.forEach(type => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label>
+        <input type="checkbox" checked onchange="toggleSiteType('${type}')"> ${type}
+      </label>
+    `;
+    container.appendChild(div);
   });
 }
 // === Get Color For Wereda ===
@@ -262,14 +293,9 @@ legend.onAdd = function (map) {
       </div>
 
     <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
-      <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label><br>
-      <div class="legend-item"><span class="legend-icon" style="background:#f44336"><i class="fas fa-landmark"></i></span> Historical</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#3f51b5"><i class="fas fa-church"></i></span> Monastry</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#009688"><i class="fas fa-cross"></i></span> Church</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#ff9800"><i class="fas fa-archway"></i></span> Archaeological</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#9c27b0"><i class="fas fa-crown"></i></span> Palace</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#4caf50"><i class="fas fa-tree"></i></span> Natural Recreation</div>
-    </div>
+  <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label><br>
+  <div id="siteLegendItems"></div>
+</div>
 
     <div class="legend-section" onmouseover="highlightLayer('river')" onmouseout="resetHighlight('river')">
       <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label><br>
@@ -309,6 +335,16 @@ function toggleLayer(type) {
     if (map.hasLayer(riverLayer)) map.removeLayer(riverLayer);
     else map.addLayer(riverLayer);
 }
+}
+
+function toggleSiteType(type) {
+  siteLayer.eachLayer(marker => {
+    const markerType = marker.feature.properties.Attra_Type?.trim() || "Unknown";
+    if (markerType === type) {
+      if (map.hasLayer(marker)) map.removeLayer(marker);
+      else map.addLayer(marker);
+    }
+  });
 }
 
 function highlightLayer(type) {
