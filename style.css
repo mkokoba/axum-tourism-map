@@ -550,6 +550,9 @@ h3{
     vertical-align: middle;
 }
 
+.legend-group { margin-top:5px; }
+.legend-group-header { cursor:pointer; font-weight:bold; margin-bottom:3px; }
+.legend-group-items { margin-left:15px; }
 
 
 
