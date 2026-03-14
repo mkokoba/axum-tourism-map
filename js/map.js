@@ -142,26 +142,26 @@ loadGeoJSON('map/road1.geojson', {
 // === River Layer ===
 loadGeoJSON('map/river1.geojson', { 
   style: function (feature) {
-    // You can adjust weight based on specific properties if available
     return {
-      color: '#2a7fff', // A vibrant river blue
+      color: '#2a7fff',
       weight: 2.5,
-      opacity: 0.8,
-      lineCap: 'round' // Makes the river joints look smooth
+      opacity: 0.8
     };
   },
+
   onEachFeature: function (feature, layer) {
-    // Accessing the specific 'River_Name' property
-    const name = feature.properties.River_Name || "Unnamed River/Stream";
-    
-    layer.bindPopup(`<b>River:</b> ${name}`);
-    
-    // Optional: Add a subtle tooltip that appears on hover
+
+    console.log("River feature:", feature);
+
+    const name = feature.properties?.River_Name || "Unnamed River";
+
+    layer.bindPopup("<b>River:</b> " + name);
+
     layer.bindTooltip(name, {
-      sticky: true, 
-      className: 'river-label'
+      sticky: true
     });
   }
+
 }).then(layer => {
   riverLayer = layer;
 });
