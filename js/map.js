@@ -7,10 +7,11 @@ let riverLayer;
 let siteLayer;
 
 // ================= BASEMAP =================
+/*
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
  attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-
+*/
 // ================= COLORS =================
 
 const roadColors = {
