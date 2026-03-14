@@ -105,8 +105,6 @@ fetch('map/wereda1.geojson')   // change to .geojson if your file uses that exte
     console.error("Error loading Wereda layer:", error);
   });
 
-
-// === Road Layer ===
 // === Road Layer ===
 loadGeoJSON('map/road1.geojson', {
 
@@ -140,6 +138,7 @@ loadGeoJSON('map/road1.geojson', {
 }).then(layer => {
   roadLayer = layer;
 });
+
 // === River Layer ===
 loadGeoJSON('map/river1.geojson', { 
   style: function (feature) {
@@ -166,6 +165,7 @@ loadGeoJSON('map/river1.geojson', {
 }).then(layer => {
   riverLayer = layer;
 });
+
 // === Tourist Site Layer ===
 loadGeoJSON('map/siteF.geojson', {
   pointToLayer: function (feature, latlng) {
@@ -260,6 +260,13 @@ legend.onAdd = function (map) {
       <div class="legend-item"><span class="legend-icon" style="background:#4caf50"><i class="fas fa-tree"></i></span> Natural Recreation</div>
     </div>
 
+    // Inside your legend.onAdd function, add this div:
+    <div class="legend-section" onmouseover="highlightLayer('river')" onmouseout="resetHighlight('river')">
+      <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label><br>
+      <span class="legend-line" style="background:#0077be; height: 3px;"></span> River
+    </div>
+
+
       <button onclick="resetMapLayers()">Reset All</button>
 
       <div style="margin-top: 10px">
@@ -288,12 +295,16 @@ function toggleLayer(type) {
     if (map.hasLayer(siteLayer)) map.removeLayer(siteLayer);
     else map.addLayer(siteLayer);
   }
+  if (type === 'river') {
+    if (map.hasLayer(riverLayer)) map.removeLayer(riverLayer);
+    else map.addLayer(riverLayer);
 }
 
 function highlightLayer(type) {
   if (type === 'wereda' && weredaLayer) weredaLayer.setStyle({ weight: 3, color: '#000' });
   if (type === 'road' && roadLayer) roadLayer.setStyle({ weight: 3 });
   if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 8 }));
+  if (type === 'river' && riverLayer) riverLayer.setStyle({ weight: 4, color: '#0000ff' });
 }
 
 function resetHighlight(type) {
@@ -310,12 +321,18 @@ function resetHighlight(type) {
     weight: 2
   }));
   if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 6 }));
+  if (type === 'river' && riverLayer) riverLayer.setStyle({
+    color: '#0077be',
+    weight: 2
+  });
 }
 
 function resetMapLayers() {
   if (!map.hasLayer(weredaLayer)) map.addLayer(weredaLayer);
   if (!map.hasLayer(roadLayer)) map.addLayer(roadLayer);
   if (!map.hasLayer(siteLayer)) map.addLayer(siteLayer);
+  if (!map.hasLayer(riverLayer)) map.addLayer(riverLayer);
+  resetHighlight('river');
   resetHighlight('wereda');
   resetHighlight('road');
   resetHighlight('site');
