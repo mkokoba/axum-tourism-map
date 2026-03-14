@@ -1,472 +1,310 @@
-// === Global Variables ===
-let map = L.map('map').setView([13.90, 37.50], 8);
-let weredaLayer, roadLayer, siteLayer, riverLayer;
+// ================= MAP INITIALIZATION =================
+let map = L.map('map').setView([13.9, 37.5], 8);
 
-// === Base Map ===
-/*
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-  attribution: '&copy; <a href="https://carto.com/">Carto</a> contributors'
+let weredaLayer;
+let roadLayer;
+let riverLayer;
+let siteLayer;
+
+// ================= BASEMAP =================
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+ attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-*/
-//attraction site awsome6 icons
-function createTouristIcon(iconClass, bgColor) {
-  return L.divIcon({
-    className: 'custom-div-icon',
-    html: `
-      <div class="icon-wrapper" style="background-color:${bgColor};">
-        <i class="${iconClass}" style="color:white;"></i>
-      </div>
-    `,
-    iconSize: [30, 30],
-    iconAnchor: [15, 30],
-    popupAnchor: [0, -30]
-  });
-}
 
-const attractionIcons = {
-  'Historical': createTouristIcon('fas fa-landmark', '#f44336'),
-  'Monastery': createTouristIcon('fas fa-church', '#3f51b5'),
-  'Church': createTouristIcon('fas fa-cross', '#009688'),
-  'Archaeological': createTouristIcon('fas fa-archway', '#ff9800'),
-  'Palace': createTouristIcon('fas fa-crown', '#9c27b0'),
-  'Natural Recreation': createTouristIcon('fas fa-tree', '#4caf50'),
-  'Unknown': createTouristIcon('fas fa-map-marker-alt', '#9e9e9e')
-};
+// ================= COLORS =================
 
-
-// === Load GeoJSON Function ===
-function loadGeoJSON(url, options) {
-  return fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      const layer = L.geoJSON(data, options).addTo(map);
-      return layer;
-    })
-    .catch(err => console.error("Error loading " + url, err));
-}
-
-// === Wereda Layer (Tigray Zones) ===
-fetch('map/wereda1.geojson')   // change to .geojson if your file uses that extension
-  .then(response => {
-    if (!response.ok) {
-      throw new Error("File not found: map/wereda1.json");
-    }
-    return response.json();
-  })
-  .then(data => {
-
-    console.log("Wereda data loaded successfully:", data);
-
-    weredaLayer = L.geoJSON(data, {
-      style: function (feature) {
-
-        // Safe property reading
-        const zoneName = feature.properties.ZONE_ || 
-                         feature.properties.Zone || 
-                         feature.properties.NAME || 
-                         "Unknown";
-
-        return {
-          color: "#333",
-          weight: 1,
-          fillColor: getColorForWereda(zoneName),
-          fillOpacity: 0.6
-        };
-      },
-
-      onEachFeature: function (feature, layer) {
-
-        const zoneName = feature.properties.ZONE_ || 
-                         feature.properties.Zone || 
-                         feature.properties.NAME || 
-                         "Unknown";
-
-        // popup
-        layer.bindPopup(
-          "<b>Zone:</b> " + zoneName
-        );
-
-        // tooltip label
-        layer.bindTooltip(zoneName, {
-          permanent: false,
-          direction: "center",
-          className: "wereda-label"
-        });
-      }
-
-    }).addTo(map);
-
-    // zoom to layer
-    const bounds = weredaLayer.getBounds();
-    map.fitBounds(bounds);
-
-  })
-  .catch(error => {
-    console.error("Error loading Wereda layer:", error);
-  });
-
-// === Road Layer ===
 const roadColors = {
-  "Asphalt": "#e41a1c",
-  "Gravel": "#ff7f00",
-  "Earth": "#999999",
-  "Asphalt UN Cons": "#4daf4a"
+ "Asphalt": "#e41a1c",
+ "Gravel": "#ff7f00",
+ "Earth": "#999999",
+ "Asphalt UN Cons": "#4daf4a"
 };
 
-// Load road layer
-loadGeoJSON('map/road1.geojson', {
-  style: function(feature) {
-    const roadType = feature.properties?.TYPE || "Unknown";
-    const isUnderConstruction = roadType === "Asphalt UN Cons"; // dashed for UN Cons
-    return {
-      color: roadColors[roadType] || "#666",
-      weight: 3,
-      dashArray: isUnderConstruction ? "6,6" : null
-    };
-  },
-  onEachFeature: function(feature, layer) {
-    const name = feature.properties.NAME || "Road";
-    const type = feature.properties.TYPE || "Unknown";
-    layer.bindPopup(`<b>Road Name:</b> ${name}<br><b>Road Type:</b> ${type}`);
-  }
-}).then(layer => {
-  roadLayer = layer;
-  generateRoadLegend();
-});
-
-// Generate road legend dynamically
-function generateRoadLegend() {
-  const container = document.getElementById("roadLegendItems");
-  if (!container) return;
-  container.innerHTML = ''; // clear old items
-
-  Object.keys(roadColors).forEach(type => {
-    const div = document.createElement("div");
-    const isUnderConstruction = type === "Asphalt UN Cons";
-    div.innerHTML = `
-      <span class="legend-line" style="background:${roadColors[type]}; ${isUnderConstruction ? 'border-top: 3px dashed #000;' : ''}"></span> ${type}
-    `;
-    container.appendChild(div);
-  });
-}
-
-// === River Layer ===
-loadGeoJSON('map/river1.geojson', { 
-  style: function (feature) {
-    return {
-      color: '#2a7fff',
-      weight: 2.5,
-      opacity: 0.8
-    };
-  },
-
-  onEachFeature: function (feature, layer) {
-
-    console.log("River feature:", feature);
-
-    const name = feature.properties?.River_Name || "Unnamed River";
-
-    layer.bindPopup("<b>River:</b> " + name);
-
-    layer.bindTooltip(name, {
-      sticky: true
-    });
-  }
-
-}).then(layer => {
-  riverLayer = layer;
-});
-
-// === Tourist Site Layer ===
-loadGeoJSON('map/siteF.geojson', {
-  pointToLayer: function (feature, latlng) {
-    const name = feature.properties.Name || 'Tourist Site';
-    const distance = feature.properties.NEAR_DIST;
-    const distanceKm = (distance / 1000).toFixed(2);
-    const type = feature.properties.Attra_Type ? feature.properties.Attra_Type.trim() : 'Unknown';
-
-    // Matching legend icon & color
-    const iconMap = {
-      'Historical': { icon: 'fas fa-landmark', color: '#f44336' },
-      'Monastery': { icon: 'fas fa-church', color: '#3f51b5' },
-      'Church': { icon: 'fas fa-cross', color: '#009688' },
-      'Archaeological': { icon: 'fas fa-archway', color: '#ff9800' },
-      'Palace': { icon: 'fas fa-crown', color: '#9c27b0' },
-      'Natural Recreation': { icon: 'fas fa-tree', color: '#4caf50' },
-      'Unknown': { icon: 'fas fa-map-marker-alt', color: '#757575' }
-    };
-
-    const iconInfo = iconMap[type] || iconMap.Unknown;
-
-    const icon = L.divIcon({
-      className: 'custom-div-icon',
-      html: `
-        <div class="icon-wrapper" style="background-color:${iconInfo.color}">
-          <i class="${iconInfo.icon}" style="color:white;"></i>
-        </div>
-      `,
-      iconSize: [30, 30],
-      iconAnchor: [15, 30],
-      popupAnchor: [0, -30]
-    });
-
-    const marker = L.marker(latlng, { icon: icon }).bindTooltip(
-      `${name}<br>Distance: ${distanceKm} km<br>Type: ${type}`,
-      {
-        permanent: false,
-        direction: 'top',
-        className: 'site-label'
-      }
-    );
-
-    marker.on('click', () => showSiteInfo(feature.properties));
-    return marker;
-  }
-}).then(layer => {
-  siteLayer = layer;
-  generateSiteLegend();
-});
-
-// === road legend ===
-function generateRoadLegend() {
-
-  const container = document.getElementById("roadLegendItems");
-
-  Object.keys(roadColors).forEach(type => {
-
-    const item = document.createElement("div");
-
-    item.innerHTML =
-      `<span class="legend-line" style="background:${roadColors[type]}"></span> ${type}`;
-
-    container.appendChild(item);
-
-  });
-}
-
-// === site legend ===
-function generateSiteLegend() {
-  const container = document.getElementById("siteLegendItems");
-  if (!container) return;
-  container.innerHTML = ''; // clear previous items
-
-  const types = new Set();
-  siteLayer.eachLayer(marker => {
-    const type = marker.feature.properties.Attra_Type?.trim() || "Unknown";
-    types.add(type);
-  });
-
-  types.forEach(type => {
-    const div = document.createElement("div");
-    div.innerHTML = `
-      <label>
-        <input type="checkbox" checked onchange="toggleSiteType('${type}')"> ${type}
-      </label>
-    `;
-    container.appendChild(div);
-  });
-}
-// === Get Color For Wereda ===
-function getColorForWereda(name) {
-  const colors = [
-    '#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00',
-    '#ffff33', '#a65628', '#f781bf', '#999999', '#66c2a5',
-    '#fc8d62', '#8da0cb', '#e78ac3', '#a6d854'
-  ];
-  let index = name.split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0) % colors.length;
-  return colors[index];
-}
-
-// === Interactive Legend ===
-const legend = L.control({ position: 'topright' });
-legend.onAdd = function (map) {
-  const div = L.DomUtil.create('div', 'custom-legend collapsible');
-  div.innerHTML = `
-    <div class="legend-header" onclick="this.parentElement.classList.toggle('collapsed')">
-      <h4>Map Legend</h4>
-    </div>
-    <div class="legend-content">
-      <div class="legend-section" onmouseover="highlightLayer('wereda')" onmouseout="resetHighlight('wereda')">
-        <label><input type="checkbox" checked onchange="toggleLayer('wereda')"> Wereda Boundaries</label><br>
-        <span class="legend-box" style="background:#a6d854;"></span> Example Wereda
-      </div>
-
-      <div class="legend-section" onmouseover="highlightLayer('road')" onmouseout="resetHighlight('road')">
-        <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label><br>
-        <div id="roadLegendItems"></div>
-      </div>
-
-    <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
-  <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label><br>
-  <div id="siteLegendItems"></div>
-</div>
-
-    <div class="legend-section" onmouseover="highlightLayer('river')" onmouseout="resetHighlight('river')">
-      <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label><br>
-      <span class="legend-line" style="background:#0077be; height: 3px;"></span> River
-    </div>
-
-
-      <button onclick="resetMapLayers()">Reset All</button>
-
-      <div style="margin-top: 10px">
-        <input type="text" id="siteSearch" placeholder="Search Tourist Site..." onkeyup="searchTouristSite(this.value)" autocomplete="off">
-      <div id="suggestions" class="suggestions-list"></div>
-</div>
-
-    </div>
-  `;
-  return div;
+const siteColors = {
+ "Historical":"#f44336",
+ "Monastery":"#3f51b5",
+ "Church":"#009688",
+ "Archaeological":"#ff9800",
+ "Palace":"#9c27b0",
+ "Natural Recreation":"#4caf50",
+ "Unknown":"#757575"
 };
-legend.addTo(map);
 
-// === Toggle & Highlight Functions ===
-
-function toggleLayer(type) {
-  if (type === 'wereda') {
-    if (map.hasLayer(weredaLayer)) map.removeLayer(weredaLayer);
-    else map.addLayer(weredaLayer);
-  }
-  if (type === 'road') {
-    if (map.hasLayer(roadLayer)) map.removeLayer(roadLayer);
-    else map.addLayer(roadLayer);
-  }
-  if (type === 'site') {
-    if (map.hasLayer(siteLayer)) map.removeLayer(siteLayer);
-    else map.addLayer(siteLayer);
-  }
-  if (type === 'river') {
-    if (map.hasLayer(riverLayer)) map.removeLayer(riverLayer);
-    else map.addLayer(riverLayer);
-}
+// ================= HELPER FUNCTION =================
+function loadGeoJSON(url, options){
+ return fetch(url)
+ .then(res => res.json())
+ .then(data => L.geoJSON(data, options).addTo(map))
+ .catch(err => console.error("Error loading:",url,err));
 }
 
-function toggleSiteType(type) {
-  siteLayer.eachLayer(marker => {
-    const markerType = marker.feature.properties.Attra_Type?.trim() || "Unknown";
-    if (markerType === type) {
-      if (map.hasLayer(marker)) map.removeLayer(marker);
-      else map.addLayer(marker);
-    }
-  });
-}
+// ================= WEREDA =================
 
-function highlightLayer(type) {
-  if (type === 'wereda' && weredaLayer) weredaLayer.setStyle({ weight: 3, color: '#000' });
-  if (type === 'road' && roadLayer) roadLayer.setStyle({ weight: 3 });
-  if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 8 }));
-  if (type === 'river' && riverLayer) riverLayer.setStyle({ weight: 4, color: '#0000ff' });
-}
-
-function resetHighlight(type) {
-  if (type === 'wereda' && weredaLayer) weredaLayer.setStyle(f => ({
-    color: '#333',
-    weight: 1,
-    fillColor: getColorForWereda(f.properties.ZONE_),
-    fillOpacity: 0.6
-  }));
-  if (type === 'road' && roadLayer) roadLayer.setStyle(function(f){
-
-  const colors = {
-    "Asphalt": "#e41a1c",
-    "Gravel": "#ff7f00",
-    "Earth": "#999999",
-    "Asphalt UN Cons": "#4daf4a"
-  };
-
-  return {
-    color: colors[f.properties?.TYPE] || "#666",
-    weight: 3
-  };
-
+loadGeoJSON('map/wereda1.geojson',{
+ style:{
+  color:"#333",
+  weight:1,
+  fillColor:"#a6d854",
+  fillOpacity:0.5
+ },
+ onEachFeature:(f,l)=>{
+  l.bindPopup("<b>Wereda:</b> "+(f.properties.ZONE_ || "Unknown"));
+ }
+}).then(layer=>{
+ weredaLayer = layer;
 });
-  if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 6 }));
-  if (type === 'river' && riverLayer) riverLayer.setStyle({
-    color: '#0077be',
-    weight: 2
-  });
-}
 
-function resetMapLayers() {
-  if (!map.hasLayer(weredaLayer)) map.addLayer(weredaLayer);
-  if (!map.hasLayer(roadLayer)) map.addLayer(roadLayer);
-  if (!map.hasLayer(siteLayer)) map.addLayer(siteLayer);
-  if (!map.hasLayer(riverLayer)) map.addLayer(riverLayer);
-  resetHighlight('river');
-  resetHighlight('wereda');
-  resetHighlight('road');
-  resetHighlight('site');
-}
+// ================= ROADS =================
 
-function searchTouristSite(query) {
-  if (!siteLayer) return;
-  query = query.trim().toLowerCase();
-  const suggestionsDiv = document.getElementById('suggestions');
-  suggestionsDiv.innerHTML = '';
-  let matches = [];
+loadGeoJSON('map/road1.geojson',{
 
-  siteLayer.eachLayer(marker => {
-    const props = marker.feature.properties;
-    const name = (props.Name || '').toLowerCase();
+ style:(f)=>{
 
-    if (name.includes(query) && query !== '') {
-      matches.push({ name: props.Name, marker: marker });
-    }
+  let type = f.properties.TYPE || "Unknown";
 
-    // Reset all markers
-    if (marker._icon) {
-      marker._icon.style.transform = 'scale(1)';
-      marker._icon.style.zIndex = '';
-    }
-  });
-
-  if (matches.length > 0) {
-    suggestionsDiv.style.display = 'block';
-
-    matches.forEach(item => {
-      const div = document.createElement('div');
-      div.textContent = item.name;
-      div.onclick = () => {
-        // Zoom and highlight the selected site
-        map.setView(item.marker.getLatLng(), 14);
-        item.marker.openTooltip();
-
-        // Zoom-in effect
-        item.marker._icon.style.transform = 'scale(1.5)';
-        item.marker._icon.style.transition = 'transform 0.3s ease';
-        item.marker._icon.style.zIndex = 1000;
-
-        // Hide suggestions
-        suggestionsDiv.innerHTML = '';
-        suggestionsDiv.style.display = 'none';
-        document.getElementById('siteSearch').value = item.name;
-      };
-      suggestionsDiv.appendChild(div);
-    });
-  } else {
-    suggestionsDiv.style.display = 'none';
+  return{
+   color: roadColors[type] || "#666",
+   weight:3,
+   dashArray: type==="Asphalt UN Cons" ? "6,6" : null
   }
+
+ },
+
+ onEachFeature:(f,l)=>{
+  l.bindPopup(
+   "<b>Road:</b> "+(f.properties.NAME || "Unknown")+
+   "<br><b>Type:</b> "+(f.properties.TYPE || "Unknown")
+  );
+ }
+
+}).then(layer=>{
+ roadLayer = layer;
+ generateRoadLegend();
+});
+
+// ================= RIVERS =================
+
+loadGeoJSON('map/river1.geojson',{
+ style:{
+  color:"#0077be",
+  weight:2
+ },
+ onEachFeature:(f,l)=>{
+  l.bindPopup("<b>River:</b> "+(f.properties.River_Name || "Unnamed"));
+ }
+}).then(layer=>{
+ riverLayer = layer;
+});
+
+// ================= TOURIST SITES =================
+
+loadGeoJSON('map/siteF.geojson',{
+
+ pointToLayer:(f,latlng)=>{
+
+  let type = f.properties.Attra_Type?.trim() || "Unknown";
+
+  let icon = L.divIcon({
+   className:"custom-icon",
+   html:`<div style="
+    background:${siteColors[type] || "#757575"};
+    width:30px;
+    height:30px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;">
+    <i class="fas fa-map-marker-alt"></i></div>`
+  });
+
+  let marker = L.marker(latlng,{icon:icon});
+
+  marker.type = type;
+  marker.props = f.properties;
+
+  marker.bindPopup(
+   "<b>"+(f.properties.Name || "Tourist Site")+"</b>"+
+   "<br>"+type
+  );
+
+  marker.on("click",()=>showSiteInfo(marker));
+
+  return marker;
+
+ }
+
+}).then(layer=>{
+ siteLayer = layer;
+ generateSiteLegend();
+});
+
+// ================= ROAD LEGEND =================
+
+function generateRoadLegend(){
+
+ let container = document.getElementById("roadLegendItems");
+
+ container.innerHTML="";
+
+ Object.keys(roadColors).forEach(type=>{
+
+  let dashed = type==="Asphalt UN Cons"
+   ? "border-top:3px dashed black;"
+   : "";
+
+  let div=document.createElement("div");
+
+  div.innerHTML=
+   `<span style="
+     display:inline-block;
+     width:30px;
+     height:3px;
+     background:${roadColors[type]};
+     ${dashed}
+     margin-right:5px;"></span>${type}`;
+
+  container.appendChild(div);
+
+ });
+
 }
 
+// ================= SITE LEGEND =================
 
+function generateSiteLegend(){
 
+ let container=document.getElementById("siteLegendItems");
 
-// === Side Panel for Tourist Site Info ===
-function showSiteInfo(props) {
-  let info = document.getElementById('site-info');
-  if (!info) {
-    info = document.createElement('div');
-    info.id = 'site-info';
-    info.className = 'site-info-panel';
-    document.body.appendChild(info);
+ container.innerHTML="";
+
+ let types=new Set();
+
+ siteLayer.eachLayer(m=>types.add(m.type));
+
+ types.forEach(type=>{
+
+  let div=document.createElement("div");
+
+  div.innerHTML=
+  `<label>
+   <input type="checkbox" checked
+   onchange="toggleSiteType('${type}',this)">
+   ${type}
+  </label>`;
+
+  container.appendChild(div);
+
+ });
+
+}
+
+// ================= TOGGLE SITE TYPES =================
+
+function toggleSiteType(type,checkbox){
+
+ siteLayer.eachLayer(marker=>{
+
+  if(marker.type===type){
+
+   if(checkbox.checked){
+    map.addLayer(marker);
+   }else{
+    map.removeLayer(marker);
+   }
+
   }
-  info.innerHTML = `
-    <h3>${props.Name || 'Tourist Site'}</h3>
-    <p><strong>Woreda:</strong> ${props.Woreda_Nam || 'Unknown'}</p>
-    <p><strong>Distance to Nearest Road:</strong> ${(props.NEAR_DIST / 1000).toFixed(2)} km</p>
-    <p><strong>Attraction Type:</strong> ${props.Attra_Type || 'Unknown'}</p>
-    <p><strong>Description:</strong> ${props.Description || 'No description available.'}</p>
-    <button onclick="document.getElementById('site-info').remove()">Close</button>
+
+ });
+
+}
+
+// ================= SITE INFO PANEL =================
+
+function showSiteInfo(marker){
+
+ let p = marker.props;
+
+ map.setView(marker.getLatLng(),14);
+
+ if(marker._icon){
+  marker._icon.style.transform="scale(1.5)";
+  marker._icon.style.transition="0.3s";
+ }
+
+ let info=document.getElementById("site-info");
+
+ if(!info){
+
+  info=document.createElement("div");
+
+  info.id="site-info";
+
+  info.style=`
+  position:absolute;
+  right:10px;
+  top:10px;
+  background:white;
+  padding:10px;
+  width:250px;
+  z-index:1000;
+  border-radius:5px;
   `;
-  info.style.display = 'block';
+
+  document.body.appendChild(info);
+
+ }
+
+ info.innerHTML=`
+ <h3>${p.Name || "Tourist Site"}</h3>
+ <p><b>Woreda:</b> ${p.Woreda_Nam || "Unknown"}</p>
+ <p><b>Distance to road:</b> ${(p.NEAR_DIST/1000).toFixed(2)} km</p>
+ <p><b>Type:</b> ${p.Attra_Type || "Unknown"}</p>
+ <p><b>Description:</b> ${p.Description || "No description available"}</p>
+ <button onclick="document.getElementById('site-info').remove()">Close</button>
+ `;
+
+}
+
+// ================= SEARCH =================
+
+function searchTouristSite(query){
+
+ if(!siteLayer) return;
+
+ query=query.toLowerCase();
+
+ siteLayer.eachLayer(marker=>{
+
+  let name=(marker.props.Name || "").toLowerCase();
+
+  if(name.includes(query)){
+   map.setView(marker.getLatLng(),14);
+   marker.openPopup();
+  }
+
+ });
+
+}
+
+// ================= LAYER TOGGLE =================
+
+function toggleLayer(layer){
+
+ if(layer==="wereda"){
+  map.hasLayer(weredaLayer) ? map.removeLayer(weredaLayer) : map.addLayer(weredaLayer);
+ }
+
+ if(layer==="road"){
+  map.hasLayer(roadLayer) ? map.removeLayer(roadLayer) : map.addLayer(roadLayer);
+ }
+
+ if(layer==="river"){
+  map.hasLayer(riverLayer) ? map.removeLayer(riverLayer) : map.addLayer(riverLayer);
+ }
+
+ if(layer==="site"){
+  map.hasLayer(siteLayer) ? map.removeLayer(siteLayer) : map.addLayer(siteLayer);
+ }
+
 }
