@@ -1,367 +1,216 @@
-// ================= MAP INITIALIZATION =================
-let map = L.map('map').setView([13.9, 37.5], 8);
+// === Global Variables ===
+let map = L.map('map').setView([13.90, 37.50], 8);
+let weredaLayer, roadLayer, siteLayer, riverLayer;
 
-let weredaLayer;
-let roadLayer;
-let riverLayer;
-let siteLayer;
-
-// ================= BASEMAP =================
+// === Base Map ===
 /*
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
- attribution: '&copy; OpenStreetMap contributors'
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; <a href="https://carto.com/">Carto</a> contributors'
 }).addTo(map);
 */
-// ================= COLORS =================
 
-const roadColors = {
- "Asphalt": "#e41a1c",
- "Gravel": "#ff7f00",
- "Earth": "#999999",
- "Asphalt UN Cons": "#4daf4a"
-};
-
-const siteColors = {
- "Historical":"#f44336",
- "Monastery":"#3f51b5",
- "Church":"#009688",
- "Archaeological":"#ff9800",
- "Palace":"#9c27b0",
- "Natural Recreation":"#4caf50",
- "Unknown":"#757575"
-};
-
-// ================= HELPER FUNCTION =================
-function loadGeoJSON(url, options){
- return fetch(url)
- .then(res => res.json())
- .then(data => L.geoJSON(data, options).addTo(map))
- .catch(err => console.error("Error loading:",url,err));
+// === Load GeoJSON Utility ===
+function loadGeoJSON(url, options) {
+  return fetch(url)
+    .then(res => res.json())
+    .then(data => {
+      const layer = L.geoJSON(data, options).addTo(map);
+      return layer;
+    })
+    .catch(err => console.error("Error loading " + url, err));
 }
 
-// ================= WEREDA =================
-
-loadGeoJSON('map/wereda1.geojson',{
- style:{
-  color:"#333",
-  weight:1,
-  fillColor:"#a6d854",
-  fillOpacity:0.5
- },
- onEachFeature:(f,l)=>{
-  l.bindPopup("<b>Wereda:</b> "+(f.properties.ZONE_ || "Unknown"));
- }
-}).then(layer=>{
- weredaLayer = layer;
-});
-
-// ================= ROADS =================
-
-loadGeoJSON('map/road1.geojson',{
-
- style:(f)=>{
-
-  let type = f.properties.TYPE || "Unknown";
-
-  return{
-   color: roadColors[type] || "#666",
-   weight:3,
-   dashArray: type==="Asphalt UN Cons" ? "6,6" : null
-  }
-
- },
-
- onEachFeature:(f,l)=>{
-  l.bindPopup(
-   "<b>Road:</b> "+(f.properties.NAME || "Unknown")+
-   "<br><b>Type:</b> "+(f.properties.TYPE || "Unknown")
-  );
- }
-
-}).then(layer=>{
- roadLayer = layer;
- generateRoadLegend();
-});
-
-// ================= RIVERS =================
-
-loadGeoJSON('map/river1.geojson',{
- style:{
-  color:"#0077be",
-  weight:2
- },
- onEachFeature:(f,l)=>{
-  l.bindPopup("<b>River:</b> "+(f.properties.River_Name || "Unnamed"));
- }
-}).then(layer=>{
- riverLayer = layer;
-});
-
-// ================= TOURIST SITES =================
-
-loadGeoJSON('map/siteF.geojson',{
-
- pointToLayer:(f,latlng)=>{
-
-  let type = f.properties.Attra_Type?.trim() || "Unknown";
-
-  let icon = L.divIcon({
-   className:"custom-icon",
-   html:`<div style="
-    background:${siteColors[type] || "#757575"};
-    width:30px;
-    height:30px;
-    border-radius:50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    color:white;">
-    <i class="fas fa-map-marker-alt"></i></div>`
+// === Wereda Layer ===
+fetch('map/wereda1.geojson')
+  .then(res => res.json())
+  .then(data => {
+    weredaLayer = L.geoJSON(data, {
+      style: f => ({
+        color: '#333',
+        weight: 1,
+        fillColor: getColorForWereda(f.properties.ZONE_ || f.properties.Zone || f.properties.NAME),
+        fillOpacity: 0.6
+      }),
+      onEachFeature: (feature, layer) => {
+        const zoneName = feature.properties.ZONE_ || feature.properties.Zone || feature.properties.NAME || "Unknown";
+        layer.bindPopup(`<b>Zone:</b> ${zoneName}`);
+        layer.bindTooltip(zoneName, { permanent: false, direction: 'center', className: 'wereda-label' });
+      }
+    }).addTo(map);
+    map.fitBounds(weredaLayer.getBounds());
   });
 
-  let marker = L.marker(latlng,{icon:icon});
+// === Road Layer ===
+const roadColors = {
+  "Asphalt": "#e41a1c",
+  "Gravel": "#ff7f00",
+  "Earth": "#999999",
+  "Asphalt UN Cons": "#4daf4a"
+};
 
-  marker.type = type;
-  marker.props = f.properties;
-
-  marker.bindPopup(
-   "<b>"+(f.properties.Name || "Tourist Site")+"</b>"+
-   "<br>"+type
-  );
-
-  marker.on("click",()=>showSiteInfo(marker));
-
-  return marker;
-
- }
-
-}).then(layer=>{
- siteLayer = layer;
- generateSiteLegend();
+loadGeoJSON('map/road1.geojson', {
+  style: feature => {
+    const type = feature.properties?.TYPE || "Unknown";
+    return {
+      color: roadColors[type] || "#666",
+      weight: 3,
+      dashArray: type === "Asphalt UN Cons" ? "6,6" : null
+    };
+  },
+  onEachFeature: (feature, layer) => {
+    layer.bindPopup(
+      `<b>Road Name:</b> ${feature.properties.NAME || "Road"}<br>` +
+      `<b>Road Type:</b> ${feature.properties.TYPE || "Unknown"}`
+    );
+  }
+}).then(layer => {
+  roadLayer = layer;
+  generateRoadLegend();
 });
 
-// ================= ROAD LEGEND =================
+// === River Layer ===
+loadGeoJSON('map/river1.geojson', {
+  style: { color: '#2a7fff', weight: 2.5, opacity: 0.8 },
+  onEachFeature: (feature, layer) => {
+    const name = feature.properties?.River_Name || "Unnamed River";
+    layer.bindPopup(`<b>River:</b> ${name}`);
+    layer.bindTooltip(name, { sticky: true });
+  }
+}).then(layer => { riverLayer = layer; });
 
-function generateRoadLegend(){
+// === Tourist Site Layer ===
+const attractionIconGroups = {
+  'Historical': ['Historical', 'Palace'],
+  'Religious': ['Church', 'Monastery'],
+  'Archaeological': ['Archaeological'],
+  'Natural': ['Natural Recreation'],
+  'Unknown': ['Unknown']
+};
 
- let container = document.getElementById("roadLegendItems");
-
- container.innerHTML="";
-
- Object.keys(roadColors).forEach(type=>{
-
-  let dashed = type==="Asphalt UN Cons"
-   ? "border-top:3px dashed black;"
-   : "";
-
-  let div=document.createElement("div");
-
-  div.innerHTML=
-   `<span style="
-     display:inline-block;
-     width:30px;
-     height:3px;
-     background:${roadColors[type]};
-     ${dashed}
-     margin-right:5px;"></span>${type}`;
-
-  container.appendChild(div);
-
- });
-
-}
-
-// ================= SITE LEGEND WITH ICONS AND COLLAPSE =================
-function generateSiteLegend(){
-
-  const container = document.getElementById("siteLegendItems");
-  container.innerHTML = "";
-
-  // Define icon for each category or type
-  const categories = {
-    "Historical Sites": {
-      icon: "fas fa-landmark",
-      types: ["Historical","Archaeological"]
-    },
-    "Religious Sites": {
-      icon: "fas fa-church",
-      types: ["Monastery","Church"]
-    },
-    "Palaces": {
-      icon: "fas fa-crown",
-      types: ["Palace"]
-    },
-    "Natural Recreation": {
-      icon: "fas fa-tree",
-      types: ["Natural Recreation"]
-    },
-    "Unknown": {
-      icon: "fas fa-map-marker-alt",
-      types: ["Unknown"]
-    }
+function createAttractionIcon(type) {
+  const colors = {
+    'Historical': '#f44336',
+    'Religious': '#3f51b5',
+    'Archaeological': '#ff9800',
+    'Natural': '#4caf50',
+    'Unknown': '#757575'
   };
+  const icons = {
+    'Historical': 'fas fa-landmark',
+    'Religious': 'fas fa-church',
+    'Archaeological': 'fas fa-archway',
+    'Natural': 'fas fa-tree',
+    'Unknown': 'fas fa-map-marker-alt'
+  };
+  return L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div class="icon-wrapper" style="background-color:${colors[type]}"><i class="${icons[type]}" style="color:white;"></i></div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -30]
+  });
+}
 
-  for(const [catName, catInfo] of Object.entries(categories)){
-
-    // Create parent div
-    const parentDiv = document.createElement("div");
-    parentDiv.className = "legend-category";
-
-    // Expand/collapse arrow
-    const arrow = document.createElement("span");
-    arrow.innerHTML = "&#9654;"; // right-pointing arrow
-    arrow.style.cursor = "pointer";
-    arrow.style.marginRight = "5px";
-
-    // Parent label with icon
-    const label = document.createElement("span");
-    label.innerHTML = `<i class="${catInfo.icon}" style="color:#333; margin-right:5px;"></i> ${catName}`;
-    label.style.cursor = "pointer";
-
-    // Content div for types (collapsed by default)
-    const contentDiv = document.createElement("div");
-    contentDiv.style.display = "none";
-    contentDiv.style.marginLeft = "20px";
-    contentDiv.style.marginTop = "2px";
-
-    // Add checkboxes for each type in category
-    catInfo.types.forEach(type=>{
-      const typeDiv = document.createElement("div");
-      typeDiv.innerHTML = `
-        <label>
-          <input type="checkbox" checked onchange="toggleSiteType('${type}',this)">
-          ${type}
-        </label>
-      `;
-      contentDiv.appendChild(typeDiv);
-    });
-
-    // Arrow click toggles content
-    arrow.onclick = ()=>{
-      if(contentDiv.style.display==="none"){
-        contentDiv.style.display="block";
-        arrow.innerHTML="&#9660;"; // down arrow
-      } else {
-        contentDiv.style.display="none";
-        arrow.innerHTML="&#9654;"; // right arrow
+loadGeoJSON('map/siteF.geojson', {
+  pointToLayer: (feature, latlng) => {
+    const typeRaw = feature.properties.Attra_Type?.trim() || 'Unknown';
+    let typeGroup = 'Unknown';
+    for (let g in attractionIconGroups) {
+      if (attractionIconGroups[g].includes(typeRaw)) {
+        typeGroup = g; break;
       }
-    };
-
-    parentDiv.appendChild(arrow);
-    parentDiv.appendChild(label);
-    parentDiv.appendChild(contentDiv);
-
-    container.appendChild(parentDiv);
+    }
+    const icon = createAttractionIcon(typeGroup);
+    const marker = L.marker(latlng, { icon: icon });
+    marker.feature = feature; // store feature
+    marker.typeGroup = typeGroup;
+    marker.bindTooltip(`${feature.properties.Name || 'Tourist Site'}<br>Type: ${typeRaw}`, { permanent:false, direction:'top', className:'site-label' });
+    marker.on('click', () => showSiteInfo(feature.properties));
+    return marker;
   }
+}).then(layer => {
+  siteLayer = layer;
+  generateSiteLegend();
+});
 
+// === Generate Road Legend ===
+function generateRoadLegend() {
+  const container = document.getElementById('roadLegendItems');
+  container.innerHTML = '';
+  Object.keys(roadColors).forEach(type => {
+    const div = document.createElement('div');
+    div.innerHTML = `<span class="legend-line" style="background:${roadColors[type]}${type==='Asphalt UN Cons'?';border-bottom:2px dashed #000':''}"></span> ${type}`;
+    container.appendChild(div);
+  });
 }
 
-// ================= TOGGLE SITE TYPES =================
-
-function toggleSiteType(type,checkbox){
-
- siteLayer.eachLayer(marker=>{
-
-  if(marker.type===type){
-
-   if(checkbox.checked){
-    map.addLayer(marker);
-   }else{
-    map.removeLayer(marker);
-   }
-
+// === Generate Tourist Site Legend ===
+function generateSiteLegend() {
+  const container = document.getElementById('siteLegendItems');
+  container.innerHTML = '';
+  for (let group in attractionIconGroups) {
+    const div = document.createElement('div');
+    div.className = 'legend-group';
+    div.innerHTML = `
+      <div class="legend-group-header" onclick="this.nextElementSibling.classList.toggle('collapsed')">
+        <span class="legend-icon" style="background-color:${getGroupColor(group)}">
+          <i class="${getGroupIcon(group)}" style="color:white"></i>
+        </span> ${group}
+      </div>
+      <div class="legend-group-content collapsed">
+        ${attractionIconGroups[group].map(type => `
+          <label><input type="checkbox" checked onchange="toggleSiteType('${type}', this)"> ${type}</label>
+        `).join('')}
+      </div>
+    `;
+    container.appendChild(div);
   }
-
- });
-
 }
 
-// ================= SITE INFO PANEL =================
+// === Toggle site types ===
+function toggleSiteType(type, checkbox){
+  siteLayer.eachLayer(marker => {
+    const typeRaw = marker.feature.properties.Attra_Type?.trim() || 'Unknown';
+    if(typeRaw === type){
+      if(checkbox.checked) map.addLayer(marker);
+      else map.removeLayer(marker);
+    }
+  });
+}
 
-function showSiteInfo(marker){
+// === Helpers for attraction group colors/icons ===
+function getGroupColor(group){
+  const colors = { 'Historical':'#f44336','Religious':'#3f51b5','Archaeological':'#ff9800','Natural':'#4caf50','Unknown':'#757575' };
+  return colors[group] || '#757575';
+}
+function getGroupIcon(group){
+  const icons = { 'Historical':'fas fa-landmark','Religious':'fas fa-church','Archaeological':'fas fa-archway','Natural':'fas fa-tree','Unknown':'fas fa-map-marker-alt' };
+  return icons[group] || 'fas fa-map-marker-alt';
+}
 
- let p = marker.props;
+// === Get Color for Wereda ===
+function getColorForWereda(name){
+  const colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf','#999999','#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854'];
+  let index = name.split('').reduce((sum,ch)=>sum+ch.charCodeAt(0),0)%colors.length;
+  return colors[index];
+}
 
- map.setView(marker.getLatLng(),14);
-
- if(marker._icon){
-  marker._icon.style.transform="scale(1.5)";
-  marker._icon.style.transition="0.3s";
- }
-
- let info=document.getElementById("site-info");
-
- if(!info){
-
-  info=document.createElement("div");
-
-  info.id="site-info";
-
-  info.style=`
-  position:absolute;
-  right:10px;
-  top:10px;
-  background:white;
-  padding:10px;
-  width:250px;
-  z-index:1000;
-  border-radius:5px;
+// === Show Tourist Info ===
+function showSiteInfo(props){
+  let info = document.getElementById('site-info');
+  if(!info){
+    info = document.createElement('div');
+    info.id = 'site-info';
+    info.className = 'site-info-panel';
+    document.body.appendChild(info);
+  }
+  info.innerHTML = `
+    <h3>${props.Name || 'Tourist Site'}</h3>
+    <p><strong>Woreda:</strong> ${props.Woreda_Nam || 'Unknown'}</p>
+    <p><strong>Distance to Nearest Road:</strong> ${(props.NEAR_DIST/1000).toFixed(2)} km</p>
+    <p><strong>Attraction Type:</strong> ${props.Attra_Type || 'Unknown'}</p>
+    <p><strong>Description:</strong> ${props.Description || 'No description available.'}</p>
+    <button onclick="document.getElementById('site-info').remove()">Close</button>
   `;
-
-  document.body.appendChild(info);
-
- }
-
- info.innerHTML=`
- <h3>${p.Name || "Tourist Site"}</h3>
- <p><b>Woreda:</b> ${p.Woreda_Nam || "Unknown"}</p>
- <p><b>Distance to road:</b> ${(p.NEAR_DIST/1000).toFixed(2)} km</p>
- <p><b>Type:</b> ${p.Attra_Type || "Unknown"}</p>
- <p><b>Description:</b> ${p.Description || "No description available"}</p>
- <button onclick="document.getElementById('site-info').remove()">Close</button>
- `;
-
-}
-
-// ================= SEARCH =================
-
-function searchTouristSite(query){
-
- if(!siteLayer) return;
-
- query=query.toLowerCase();
-
- siteLayer.eachLayer(marker=>{
-
-  let name=(marker.props.Name || "").toLowerCase();
-
-  if(name.includes(query)){
-   map.setView(marker.getLatLng(),14);
-   marker.openPopup();
-  }
-
- });
-
-}
-
-// ================= LAYER TOGGLE =================
-
-function toggleLayer(layer){
-
- if(layer==="wereda"){
-  map.hasLayer(weredaLayer) ? map.removeLayer(weredaLayer) : map.addLayer(weredaLayer);
- }
-
- if(layer==="road"){
-  map.hasLayer(roadLayer) ? map.removeLayer(roadLayer) : map.addLayer(roadLayer);
- }
-
- if(layer==="river"){
-  map.hasLayer(riverLayer) ? map.removeLayer(riverLayer) : map.addLayer(riverLayer);
- }
-
- if(layer==="site"){
-  map.hasLayer(siteLayer) ? map.removeLayer(siteLayer) : map.addLayer(siteLayer);
- }
-
+  info.style.display='block';
 }
