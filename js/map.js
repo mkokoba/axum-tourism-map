@@ -110,19 +110,20 @@ loadGeoJSON('map/road1.geojson', {
 
   style: function (feature) {
 
-   const colors = {
-  "Asphalt": '#e41a1c',
-  "Gravel": '#ff7f00',
-  "Asphalt UN Cons": '#4daf4a'
-};
+  const colors = {
+    "Asphalt": "#e41a1c",
+    "Gravel": "#ff7f00",
+    "Earth": "#999999",
+    "Asphalt UN Cons": "#4daf4a"
+  };
 
-    const roadType = feature.properties.TYPE;
+  const roadType = feature.properties?.TYPE || "Unknown";
 
-    return {
-      color: colors[roadType] || '#666',
-      weight: 3
-    };
-  },
+  return {
+    color: colors[roadType] || "#666",
+    weight: 3
+  };
+},
 
   onEachFeature: function (feature, layer) {
 
@@ -312,15 +313,21 @@ function resetHighlight(type) {
     fillColor: getColorForWereda(f.properties.ZONE_),
     fillOpacity: 0.6
   }));
-  if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
-    color: {
-    "Asphalt": '#e41a1c',
-    "Gravel": '#ff7f00',
-    "Earth": '#999999',
-    "Asphalt UN Cons": '#4daf4a'
-}[f.properties.TYPE] || '#666',
-    weight: 2
-  }));
+  if (type === 'road' && roadLayer) roadLayer.setStyle(function(f){
+
+  const colors = {
+    "Asphalt": "#e41a1c",
+    "Gravel": "#ff7f00",
+    "Earth": "#999999",
+    "Asphalt UN Cons": "#4daf4a"
+  };
+
+  return {
+    color: colors[f.properties?.TYPE] || "#666",
+    weight: 3
+  };
+
+});
   if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 6 }));
   if (type === 'river' && riverLayer) riverLayer.setStyle({
     color: '#0077be',
