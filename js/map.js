@@ -170,32 +170,88 @@ function generateRoadLegend(){
 
 }
 
-// ================= SITE LEGEND =================
-
+// ================= SITE LEGEND WITH ICONS AND COLLAPSE =================
 function generateSiteLegend(){
 
- let container=document.getElementById("siteLegendItems");
+  const container = document.getElementById("siteLegendItems");
+  container.innerHTML = "";
 
- container.innerHTML="";
+  // Define icon for each category or type
+  const categories = {
+    "Historical Sites": {
+      icon: "fas fa-landmark",
+      types: ["Historical","Archaeological"]
+    },
+    "Religious Sites": {
+      icon: "fas fa-church",
+      types: ["Monastery","Church"]
+    },
+    "Palaces": {
+      icon: "fas fa-crown",
+      types: ["Palace"]
+    },
+    "Natural Recreation": {
+      icon: "fas fa-tree",
+      types: ["Natural Recreation"]
+    },
+    "Unknown": {
+      icon: "fas fa-map-marker-alt",
+      types: ["Unknown"]
+    }
+  };
 
- let types=new Set();
+  for(const [catName, catInfo] of Object.entries(categories)){
 
- siteLayer.eachLayer(m=>types.add(m.type));
+    // Create parent div
+    const parentDiv = document.createElement("div");
+    parentDiv.className = "legend-category";
 
- types.forEach(type=>{
+    // Expand/collapse arrow
+    const arrow = document.createElement("span");
+    arrow.innerHTML = "&#9654;"; // right-pointing arrow
+    arrow.style.cursor = "pointer";
+    arrow.style.marginRight = "5px";
 
-  let div=document.createElement("div");
+    // Parent label with icon
+    const label = document.createElement("span");
+    label.innerHTML = `<i class="${catInfo.icon}" style="color:#333; margin-right:5px;"></i> ${catName}`;
+    label.style.cursor = "pointer";
 
-  div.innerHTML=
-  `<label>
-   <input type="checkbox" checked
-   onchange="toggleSiteType('${type}',this)">
-   ${type}
-  </label>`;
+    // Content div for types (collapsed by default)
+    const contentDiv = document.createElement("div");
+    contentDiv.style.display = "none";
+    contentDiv.style.marginLeft = "20px";
+    contentDiv.style.marginTop = "2px";
 
-  container.appendChild(div);
+    // Add checkboxes for each type in category
+    catInfo.types.forEach(type=>{
+      const typeDiv = document.createElement("div");
+      typeDiv.innerHTML = `
+        <label>
+          <input type="checkbox" checked onchange="toggleSiteType('${type}',this)">
+          ${type}
+        </label>
+      `;
+      contentDiv.appendChild(typeDiv);
+    });
 
- });
+    // Arrow click toggles content
+    arrow.onclick = ()=>{
+      if(contentDiv.style.display==="none"){
+        contentDiv.style.display="block";
+        arrow.innerHTML="&#9660;"; // down arrow
+      } else {
+        contentDiv.style.display="none";
+        arrow.innerHTML="&#9654;"; // right arrow
+      }
+    };
+
+    parentDiv.appendChild(arrow);
+    parentDiv.appendChild(label);
+    parentDiv.appendChild(contentDiv);
+
+    container.appendChild(parentDiv);
+  }
 
 }
 
