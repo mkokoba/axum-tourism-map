@@ -106,62 +106,73 @@ fetch('map/wereda1.geojson')   // change to .geojson if your file uses that exte
   });
 
 // === Road Layer ===
+const roadColors = {
+  "Asphalt": "#e41a1c",
+  "Gravel": "#ff7f00",
+  "Earth": "#999999",
+  "Asphalt UN Cons": "#4daf4a"
+};
+
+// Load road layer
 loadGeoJSON('map/road1.geojson', {
-
-  style: function (feature) {
-
-    const colors = {
-      Asphalt: '#e41a1c',
-      Gravel: '#ff7f00',
-      Earth: '#999999'
-    };
-
-    const roadType = feature.properties.TYPE;
-
+  style: function(feature) {
+    const roadType = feature.properties?.TYPE || "Unknown";
+    const isUnderConstruction = roadType === "Asphalt UN Cons"; // dashed for UN Cons
     return {
-      color: colors[roadType] || '#666',
-      weight: 3
+      color: roadColors[roadType] || "#666",
+      weight: 3,
+      dashArray: isUnderConstruction ? "6,6" : null
     };
   },
-
-  onEachFeature: function (feature, layer) {
-
+  onEachFeature: function(feature, layer) {
     const name = feature.properties.NAME || "Road";
     const type = feature.properties.TYPE || "Unknown";
-
-    layer.bindPopup(
-      "<b>Road Name:</b> " + name +
-      "<br><b>Road Type:</b> " + type
-    );
+    layer.bindPopup(`<b>Road Name:</b> ${name}<br><b>Road Type:</b> ${type}`);
   }
-
 }).then(layer => {
   roadLayer = layer;
+  generateRoadLegend();
 });
+
+// Generate road legend dynamically
+function generateRoadLegend() {
+  const container = document.getElementById("roadLegendItems");
+  if (!container) return;
+  container.innerHTML = ''; // clear old items
+
+  Object.keys(roadColors).forEach(type => {
+    const div = document.createElement("div");
+    const isUnderConstruction = type === "Asphalt UN Cons";
+    div.innerHTML = `
+      <span class="legend-line" style="background:${roadColors[type]}; ${isUnderConstruction ? 'border-top: 3px dashed #000;' : ''}"></span> ${type}
+    `;
+    container.appendChild(div);
+  });
+}
 
 // === River Layer ===
 loadGeoJSON('map/river1.geojson', { 
   style: function (feature) {
-    // You can adjust weight based on specific properties if available
     return {
-      color: '#2a7fff', // A vibrant river blue
+      color: '#2a7fff',
       weight: 2.5,
-      opacity: 0.8,
-      lineCap: 'round' // Makes the river joints look smooth
+      opacity: 0.8
     };
   },
+
   onEachFeature: function (feature, layer) {
-    // Accessing the specific 'River_Name' property
-    const name = feature.properties.River_Name || "Unnamed River/Stream";
-    
-    layer.bindPopup(`<b>River:</b> ${name}`);
-    
-    // Optional: Add a subtle tooltip that appears on hover
+
+    console.log("River feature:", feature);
+
+    const name = feature.properties?.River_Name || "Unnamed River";
+
+    layer.bindPopup("<b>River:</b> " + name);
+
     layer.bindTooltip(name, {
-      sticky: true, 
-      className: 'river-label'
+      sticky: true
     });
   }
+
 }).then(layer => {
   riverLayer = layer;
 });
@@ -213,9 +224,48 @@ loadGeoJSON('map/siteF.geojson', {
   }
 }).then(layer => {
   siteLayer = layer;
+  generateSiteLegend();
 });
 
+// === road legend ===
+function generateRoadLegend() {
 
+  const container = document.getElementById("roadLegendItems");
+
+  Object.keys(roadColors).forEach(type => {
+
+    const item = document.createElement("div");
+
+    item.innerHTML =
+      `<span class="legend-line" style="background:${roadColors[type]}"></span> ${type}`;
+
+    container.appendChild(item);
+
+  });
+}
+
+// === site legend ===
+function generateSiteLegend() {
+  const container = document.getElementById("siteLegendItems");
+  if (!container) return;
+  container.innerHTML = ''; // clear previous items
+
+  const types = new Set();
+  siteLayer.eachLayer(marker => {
+    const type = marker.feature.properties.Attra_Type?.trim() || "Unknown";
+    types.add(type);
+  });
+
+  types.forEach(type => {
+    const div = document.createElement("div");
+    div.innerHTML = `
+      <label>
+        <input type="checkbox" checked onchange="toggleSiteType('${type}')"> ${type}
+      </label>
+    `;
+    container.appendChild(div);
+  });
+}
 // === Get Color For Wereda ===
 function getColorForWereda(name) {
   const colors = [
@@ -243,22 +293,13 @@ legend.onAdd = function (map) {
 
       <div class="legend-section" onmouseover="highlightLayer('road')" onmouseout="resetHighlight('road')">
         <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label><br>
-        <span class="legend-line" style="background:#e41a1c;"></span> Trunk<br>
-        <span class="legend-line" style="background:#377eb8;"></span> Primary<br>
-        <span class="legend-line" style="background:#4daf4a;"></span> Secondary<br>
-        <span class="legend-line" style="background:#984ea3;"></span> Tertiary<br>
-        <span class="legend-line" style="background:#ff7f00;"></span> Residential
+        <div id="roadLegendItems"></div>
       </div>
 
     <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
-      <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label><br>
-      <div class="legend-item"><span class="legend-icon" style="background:#f44336"><i class="fas fa-landmark"></i></span> Historical</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#3f51b5"><i class="fas fa-church"></i></span> Monastry</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#009688"><i class="fas fa-cross"></i></span> Church</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#ff9800"><i class="fas fa-archway"></i></span> Archaeological</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#9c27b0"><i class="fas fa-crown"></i></span> Palace</div>
-      <div class="legend-item"><span class="legend-icon" style="background:#4caf50"><i class="fas fa-tree"></i></span> Natural Recreation</div>
-    </div>
+  <label><input type="checkbox" checked onchange="toggleLayer('site')"> Tourist Sites</label><br>
+  <div id="siteLegendItems"></div>
+</div>
 
     <div class="legend-section" onmouseover="highlightLayer('river')" onmouseout="resetHighlight('river')">
       <label><input type="checkbox" checked onchange="toggleLayer('river')"> Rivers & Waterways</label><br>
@@ -300,6 +341,16 @@ function toggleLayer(type) {
 }
 }
 
+function toggleSiteType(type) {
+  siteLayer.eachLayer(marker => {
+    const markerType = marker.feature.properties.Attra_Type?.trim() || "Unknown";
+    if (markerType === type) {
+      if (map.hasLayer(marker)) map.removeLayer(marker);
+      else map.addLayer(marker);
+    }
+  });
+}
+
 function highlightLayer(type) {
   if (type === 'wereda' && weredaLayer) weredaLayer.setStyle({ weight: 3, color: '#000' });
   if (type === 'road' && roadLayer) roadLayer.setStyle({ weight: 3 });
@@ -314,12 +365,21 @@ function resetHighlight(type) {
     fillColor: getColorForWereda(f.properties.ZONE_),
     fillOpacity: 0.6
   }));
-  if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
-    color: {
-      trunk: '#e41a1c', primary: '#377eb8', secondary: '#4daf4a', tertiary: '#984ea3', residential: '#ff7f00'
-    }[f.properties.fclass] || '#999',
-    weight: 2
-  }));
+  if (type === 'road' && roadLayer) roadLayer.setStyle(function(f){
+
+  const colors = {
+    "Asphalt": "#e41a1c",
+    "Gravel": "#ff7f00",
+    "Earth": "#999999",
+    "Asphalt UN Cons": "#4daf4a"
+  };
+
+  return {
+    color: colors[f.properties?.TYPE] || "#666",
+    weight: 3
+  };
+
+});
   if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 6 }));
   if (type === 'river' && riverLayer) riverLayer.setStyle({
     color: '#0077be',
@@ -410,28 +470,3 @@ function showSiteInfo(props) {
   `;
   info.style.display = 'block';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
