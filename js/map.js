@@ -243,11 +243,9 @@ legend.onAdd = function (map) {
 
       <div class="legend-section" onmouseover="highlightLayer('road')" onmouseout="resetHighlight('road')">
         <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label><br>
-        <span class="legend-line" style="background:#e41a1c;"></span> Trunk<br>
-        <span class="legend-line" style="background:#377eb8;"></span> Primary<br>
-        <span class="legend-line" style="background:#4daf4a;"></span> Secondary<br>
-        <span class="legend-line" style="background:#984ea3;"></span> Tertiary<br>
-        <span class="legend-line" style="background:#ff7f00;"></span> Residential
+        <span class="legend-line" style="background:#e41a1c;"></span> Asphalt<br>
+        <span class="legend-line" style="background:#ff7f00;"></span> Gravel<br>
+        <span class="legend-line" style="background:#999999;"></span> Asphalt UN Cons
       </div>
 
     <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
@@ -316,8 +314,10 @@ function resetHighlight(type) {
   }));
   if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
     color: {
-      trunk: '#e41a1c', primary: '#377eb8', secondary: '#4daf4a', tertiary: '#984ea3', residential: '#ff7f00'
-    }[f.properties.fclass] || '#999',
+    Asphalt: '#e41a1c',
+    Gravel: '#ff7f00',
+    Asphalt UN Cons: '#999999'
+}[f.properties.TYPE] || '#666',
     weight: 2
   }));
   if (type === 'site' && siteLayer) siteLayer.eachLayer(l => l.setStyle({ radius: 6 }));
