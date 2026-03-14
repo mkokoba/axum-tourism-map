@@ -112,41 +112,43 @@ const roadColors = {
   "Earth": "#999999",
   "Asphalt UN Cons": "#4daf4a"
 };
+
+// Load road layer
 loadGeoJSON('map/road1.geojson', {
-
-  style: function (feature) {
-
-  const roadType = feature.properties?.TYPE || "Unknown";
-
-  return {
-    color: roadColors[roadType] || "#666",
-    weight: 3
-  };
-    const isUnderConstruction = roadType === "Asphalt UN Cons";
-
-  return {
-    color: colors[roadType] || "#666",
-    weight: 3,
-    dashArray: isUnderConstruction ? "6, 6" : null  // dashed for under construction
-  };
-} 
-},
-
-  onEachFeature: function (feature, layer) {
-
+  style: function(feature) {
+    const roadType = feature.properties?.TYPE || "Unknown";
+    const isUnderConstruction = roadType === "Asphalt UN Cons"; // dashed for UN Cons
+    return {
+      color: roadColors[roadType] || "#666",
+      weight: 3,
+      dashArray: isUnderConstruction ? "6,6" : null
+    };
+  },
+  onEachFeature: function(feature, layer) {
     const name = feature.properties.NAME || "Road";
     const type = feature.properties.TYPE || "Unknown";
-
-    layer.bindPopup(
-      "<b>Road Name:</b> " + name +
-      "<br><b>Road Type:</b> " + type
-    );
+    layer.bindPopup(`<b>Road Name:</b> ${name}<br><b>Road Type:</b> ${type}`);
   }
-
 }).then(layer => {
   roadLayer = layer;
   generateRoadLegend();
 });
+
+// Generate road legend dynamically
+function generateRoadLegend() {
+  const container = document.getElementById("roadLegendItems");
+  if (!container) return;
+  container.innerHTML = ''; // clear old items
+
+  Object.keys(roadColors).forEach(type => {
+    const div = document.createElement("div");
+    const isUnderConstruction = type === "Asphalt UN Cons";
+    div.innerHTML = `
+      <span class="legend-line" style="background:${roadColors[type]}; ${isUnderConstruction ? 'border-top: 3px dashed #000;' : ''}"></span> ${type}
+    `;
+    container.appendChild(div);
+  });
+}
 
 // === River Layer ===
 loadGeoJSON('map/river1.geojson', { 
@@ -245,9 +247,8 @@ function generateRoadLegend() {
 // === site legend ===
 function generateSiteLegend() {
   const container = document.getElementById("siteLegendItems");
-  if (!container) return; // safety check
-
-  container.innerHTML = ''; // clear previous legend items
+  if (!container) return;
+  container.innerHTML = ''; // clear previous items
 
   const types = new Set();
   siteLayer.eachLayer(marker => {
