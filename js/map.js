@@ -106,21 +106,20 @@ fetch('map/wereda1.geojson')   // change to .geojson if your file uses that exte
   });
 
 // === Road Layer ===
+const roadColors = {
+  "Asphalt": "#e41a1c",
+  "Gravel": "#ff7f00",
+  "Earth": "#999999",
+  "Asphalt UN Cons": "#4daf4a"
+};
 loadGeoJSON('map/road1.geojson', {
 
   style: function (feature) {
 
-  const colors = {
-    "Asphalt": "#e41a1c",
-    "Gravel": "#ff7f00",
-    "Earth": "#999999",
-    "Asphalt UN Cons": "#4daf4a"
-  };
-
   const roadType = feature.properties?.TYPE || "Unknown";
 
   return {
-    color: colors[roadType] || "#666",
+    color: roadColors[roadType] || "#666",
     weight: 3
   };
 },
@@ -138,6 +137,7 @@ loadGeoJSON('map/road1.geojson', {
 
 }).then(layer => {
   roadLayer = layer;
+  generateRoadLegend();
 });
 
 // === River Layer ===
@@ -216,7 +216,21 @@ loadGeoJSON('map/siteF.geojson', {
   siteLayer = layer;
 });
 
+function generateRoadLegend() {
 
+  const container = document.getElementById("roadLegendItems");
+
+  Object.keys(roadColors).forEach(type => {
+
+    const item = document.createElement("div");
+
+    item.innerHTML =
+      `<span class="legend-line" style="background:${roadColors[type]}"></span> ${type}`;
+
+    container.appendChild(item);
+
+  });
+}
 // === Get Color For Wereda ===
 function getColorForWereda(name) {
   const colors = [
@@ -244,9 +258,7 @@ legend.onAdd = function (map) {
 
       <div class="legend-section" onmouseover="highlightLayer('road')" onmouseout="resetHighlight('road')">
         <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label><br>
-        <span class="legend-line" style="background:#e41a1c;"></span> Asphalt<br>
-        <span class="legend-line" style="background:#ff7f00;"></span> Gravel<br>
-        <span class="legend-line" style="background:#4daf4a;"></span> Asphalt UN Cons
+        <div id="roadLegendItems"></div>
       </div>
 
     <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
