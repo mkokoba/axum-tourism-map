@@ -141,7 +141,7 @@ loadGeoJSON('map/road1.geojson', {
   roadLayer = layer;
 });
 // === River Layer ===
-loadGeoJSON('map/rivers.geojson', { 
+loadGeoJSON('map/river1.geojson', { 
   style: function (feature) {
     // You can adjust weight based on specific properties if available
     return {
