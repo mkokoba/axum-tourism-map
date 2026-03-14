@@ -110,11 +110,11 @@ loadGeoJSON('map/road1.geojson', {
 
   style: function (feature) {
 
-    const colors = {
-      Asphalt: '#e41a1c',
-      Gravel: '#ff7f00',
-      Earth: '#999999'
-    };
+   const colors = {
+  "Asphalt": '#e41a1c',
+  "Gravel": '#ff7f00',
+  "Asphalt UN Cons": '#4daf4a'
+};
 
     const roadType = feature.properties.TYPE;
 
@@ -245,7 +245,7 @@ legend.onAdd = function (map) {
         <label><input type="checkbox" checked onchange="toggleLayer('road')"> Roads</label><br>
         <span class="legend-line" style="background:#e41a1c;"></span> Asphalt<br>
         <span class="legend-line" style="background:#ff7f00;"></span> Gravel<br>
-        <span class="legend-line" style="background:#999999;"></span> Asphalt UN Cons
+        <span class="legend-line" style="background:#4daf4a;"></span> Asphalt UN Cons
       </div>
 
     <div class="legend-section" onmouseover="highlightLayer('site')" onmouseout="resetHighlight('site')">
@@ -314,9 +314,10 @@ function resetHighlight(type) {
   }));
   if (type === 'road' && roadLayer) roadLayer.setStyle(f => ({
     color: {
-    Asphalt: '#e41a1c',
-    Gravel: '#ff7f00',
-    Asphalt UN Cons: '#999999'
+    "Asphalt": '#e41a1c',
+    "Gravel": '#ff7f00',
+    "Earth": '#999999',
+    "Asphalt UN Cons": '#4daf4a'
 }[f.properties.TYPE] || '#666',
     weight: 2
   }));
