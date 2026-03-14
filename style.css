@@ -473,7 +473,13 @@ h3{
   }
 
 
-
+.legend-line {
+  display: inline-block;
+  width: 30px;
+  height: 4px; /* Slightly thicker for rivers */
+  margin-right: 5px;
+  vertical-align: middle;
+}
 
 
 
