@@ -245,6 +245,9 @@ function generateRoadLegend() {
 // === site legend ===
 function generateSiteLegend() {
   const container = document.getElementById("siteLegendItems");
+  if (!container) return; // safety check
+
+  container.innerHTML = ''; // clear previous legend items
 
   const types = new Set();
   siteLayer.eachLayer(marker => {
