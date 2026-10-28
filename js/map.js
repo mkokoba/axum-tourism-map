@@ -3,11 +3,11 @@ let map = L.map('map').setView([13.90, 37.50], 8);
 let weredaLayer, roadLayer, siteLayer, riverLayer;
 
 // === Base Map ===
-/*
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
-*/
+
 // === Load GeoJSON function ===
 function loadGeoJSON(url, options) {
   return fetch(url)
