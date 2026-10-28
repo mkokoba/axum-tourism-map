@@ -15,7 +15,44 @@ function loadGeoJSON(url, options) {
     .then(data => L.geoJSON(data, options).addTo(map))
     .catch(err => console.error("Error loading " + url, err));
 }
+// === Load Wereda Boundaries ===
+fetch('map/wereda1.geojson')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`HTTP error: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(data => {
+    weredaLayer = L.geoJSON(data, {
+      style: function () {
+        return {
+          color: '#38761d',
+          weight: 2,
+          opacity: 1,
+          fillColor: '#a6d854',
+          fillOpacity: 0.15
+        };
+      },
+      onEachFeature: function (feature, layer) {
+        const name =
+          feature.properties?.WEREDA ||
+          feature.properties?.WEREDA_NAME ||
+          feature.properties?.NAME ||
+          'Wereda';
 
+        layer.bindPopup(`<b>Wereda:</b> ${name}`);
+      }
+    }).addTo(map);
+
+    console.log(
+      'Wereda boundaries loaded:',
+      data.features ? data.features.length : 0
+    );
+  })
+  .catch(error => {
+    console.error('Error loading wereda1.geojson:', error);
+  });
 // === Road Colors and Dashed Style ===
 const roadColors = {
   "Asphalt": "#e41a1c",
