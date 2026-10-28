@@ -86,14 +86,16 @@ const touristGroups = {
   'Unknown': ['Unknown']
 };
 
+// === Tourist Site Symbology ===
+
 const iconMap = {
-  'Historical': 'fas fa-landmark',
-  'Palace': 'fas fa-crown',
-  'Archaeological': 'fas fa-archway',
-  'Church': 'fas fa-cross',
-  'Monastery': 'fas fa-church',
-  'Natural Recreation': 'fas fa-tree',
-  'Unknown': 'fas fa-map-marker-alt'
+  'Historical': 'fa-landmark',
+  'Palace': 'fa-crown',
+  'Archaeological': 'fa-archway',
+  'Church': 'fa-cross',
+  'Monastery': 'fa-church',
+  'Natural Recreation': 'fa-tree',
+  'Unknown': 'fa-map-marker-alt'
 };
 
 const colorMap = {
@@ -106,19 +108,104 @@ const colorMap = {
   'Unknown': '#757575'
 };
 
-// === Load Tourist Sites ===
+// Normalize category names to avoid spelling/capitalization problems
+function normalizeSiteType(value) {
+  const raw = String(value || '').trim().toLowerCase();
+
+  const categories = {
+    'historical': 'Historical',
+    'historic': 'Historical',
+    'palace': 'Palace',
+    'archaeological': 'Archaeological',
+    'archaeology': 'Archaeological',
+    'church': 'Church',
+    'churches': 'Church',
+    'monastery': 'Monastery',
+    'monasteries': 'Monastery',
+    'natural recreation': 'Natural Recreation',
+    'natural': 'Natural Recreation',
+    'recreation': 'Natural Recreation'
+  };
+
+  return categories[raw] || 'Unknown';
+}
+
+// === Load All Tourist Sites ===
 loadGeoJSON('map/siteF.geojson', {
-  pointToLayer: function(feature, latlng) {
-    const type = feature.properties.Attra_Type?.trim() || 'Unknown';
+  pointToLayer: function (feature, latlng) {
+    const properties = feature.properties || {};
+
+    const name =
+      properties.Name ||
+      properties.NAME ||
+      properties.name ||
+      'Tourist Site';
+
+    const type = normalizeSiteType(properties.Attra_Type);
+
+    const iconClass = iconMap[type] || iconMap['Unknown'];
+    const iconColor = colorMap[type] || colorMap['Unknown'];
+
     const icon = L.divIcon({
       className: 'custom-div-icon',
-      html: `<i class="${iconMap[type]}" style="color:${colorMap[type]}"></i>`,
-      iconSize: [20,20]
+      html: `
+        <div style="
+          width: 28px;
+          height: 28px;
+          background: ${iconColor};
+          border: 2px solid white;
+          border-radius: 50%;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        ">
+          <i class="fas ${iconClass}"
+             style="color:white;font-size:14px;"></i>
+        </div>
+      `,
+      iconSize: [32, 32],
+      iconAnchor: [16, 16],
+      popupAnchor: [0, -16]
     });
-    return L.marker(latlng, {icon}).bindPopup(`<b>${feature.properties.Name}</b><br>${type}`);
+
+    return L.marker(latlng, { icon: icon })
+      .bindPopup(
+        `<b>${name}</b><br>` +
+        `<b>Category:</b> ${type}`
+      );
+  },
+
+  onEachFeature: function (feature, layer) {
+    // Keep the original category available for debugging
+    const properties = feature.properties || {};
+
+    layer.feature = feature;
+
+    if (!properties.Attra_Type) {
+      console.warn(
+        'Tourist site has no Attra_Type:',
+        properties
+      );
+    }
   }
-}).then(layer => { 
+}).then(layer => {
   siteLayer = layer;
+
+  // Report how many sites were loaded
+  const counts = {};
+
+  layer.eachLayer(marker => {
+    const properties = marker.feature.properties || {};
+    const type = normalizeSiteType(properties.Attra_Type);
+
+    counts[type] = (counts[type] || 0) + 1;
+  });
+
+  console.log('Total tourist sites loaded:', layer.getLayers().length);
+  console.table(counts);
+
+  // Refresh the existing category legend
   generateSiteLegend();
 });
 
@@ -169,11 +256,18 @@ function generateSiteLegend() {
 
 // === Toggle Tourist Sites by Type ===
 function toggleSiteType(type) {
+  if (!siteLayer) return;
+
   siteLayer.eachLayer(marker => {
-    const markerType = marker.feature.properties.Attra_Type?.trim() || 'Unknown';
+    const properties = marker.feature?.properties || {};
+    const markerType = normalizeSiteType(properties.Attra_Type);
+
     if (markerType === type) {
-      if (map.hasLayer(marker)) map.removeLayer(marker);
-      else map.addLayer(marker);
+      if (map.hasLayer(marker)) {
+        map.removeLayer(marker);
+      } else {
+        map.addLayer(marker);
+      }
     }
   });
 }
